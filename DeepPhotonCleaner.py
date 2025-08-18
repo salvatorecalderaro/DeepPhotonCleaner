@@ -6,6 +6,17 @@ import random
 import os
 import platform
 import cpuinfo
+from torch.utils.data import TensorDataset,DataLoader
+import streamlit as st
+
+
+seed = 2025 
+alpha = 0.7
+beta = 0.3
+lr = 1e-3
+mini_batch_size = 16
+gamma = 0.1
+epochs = 1000
 
 def set_seed(seed):
     random.seed(seed)
@@ -108,3 +119,73 @@ def bin_data(glowcurvedata, nbins):
     energy_mean_aligned = energy_mean.reindex(counts.index, fill_value=0)
     binned_data = np.vstack((counts.values, energy_mean_aligned.values))
     return grid, binned_data
+
+def create_windows(data, window_size, stride):
+    """
+    Creates overlapping windows of data.
+
+    Parameters
+    ----------
+    data : array_like
+        The input data.
+    window_size : int
+        The size of each window.
+    stride : int
+        The step between each window.
+
+    Returns
+    -------
+    windows : array_like
+        The overlapping windows.
+    """
+    windows = []
+    for start in range(0, data.shape[1] - window_size + 1, stride):
+        windows.append(data[:, start : start + window_size])
+    return np.stack(windows)
+
+
+def train_model(device, model, windows):
+    """
+    Train a model to identify noisy bins.
+
+    Parameters
+    ----------
+    device : torch.device
+        The device to use for training.
+    model : torch.nn.Module
+        The model to train.
+    windows : array_like
+        The overlapping windows of data.
+
+    Returns
+    -------
+    model : torch.nn.Module
+        The trained model.
+    """
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    poisson_loss_fn = torch.nn.PoissonNLLLoss(log_input=False, full=True)
+    mse_loss_fn = torch.nn.MSELoss()
+
+    dataset = TensorDataset(torch.from_numpy(windows).float())
+    train_loader = DataLoader(dataset, batch_size=mini_batch_size, shuffle=True)
+    
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    status_text.text("🔍 Identifying noisy bins...")
+
+    for epoch in range(epochs):
+        model.train()
+        epoch_loss = 0
+        for (batch,) in train_loader:
+            batch = batch.to(device)
+            optimizer.zero_grad()
+            out,_ = model(batch)
+            loss_poisson = poisson_loss_fn(out, batch)
+            loss_mse = mse_loss_fn(out, batch)
+            loss = alpha * loss_poisson + beta * loss_mse
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+        progress_bar.progress((epoch + 1) / epochs)
+    status_text.text("✅ Noisy bins identification complete!")
+    return model

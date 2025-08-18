@@ -1,6 +1,7 @@
 import streamlit as st
 from tempfile import NamedTemporaryFile
 from DeepPhotonCleaner import identify_device, read_fits, bin_data, create_windows, train_model
+from DeepPhotonCleaner import reconstruct_curve
 from plot_utils import plot_noisy_curve
 from model import MultichannelAutoencoder
 
@@ -81,4 +82,4 @@ if st.session_state.curve_created and not st.session_state.cleaning_done:
             windows = create_windows(st.session_state.curve_data, window_size=16, stride=8)
             model = MultichannelAutoencoder().to(st.session_state.device)
             st.session_state.model = train_model(st.session_state.device, model, windows)
-            
+            error,tau,bin_embs = reconstruct_curve(st.session_state.curve_data, st.session_state.model, windows, st.session_state.device)

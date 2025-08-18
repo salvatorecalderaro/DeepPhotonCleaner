@@ -189,3 +189,56 @@ def train_model(device, model, windows):
         progress_bar.progress((epoch + 1) / epochs)
     status_text.text("✅ Noisy bins identification complete!")
     return model
+
+
+def reconstruct_curve(data, model, windows, device):
+    """
+    Reconstructs the input data from overlapping windows of the data.
+
+    Parameters
+    ----------
+    data : array_like
+        The input data.
+    model : torch.nn.Module
+        The model to use for reconstructing the data.
+    windows : array_like
+        The overlapping windows of data.
+    device : torch.device
+        The device to use for reconstructing the data.
+
+    Returns
+    -------
+    error : array_like
+        The absolute difference between the reconstructed data and the original data.
+    threshold : float
+        The threshold value to determine if a segment is considered 'good'.
+        The threshold is calculated as the 90th percentile of the error array.
+    bin_embeddings : array_like
+        The embeddings of each bin calculated by summing the embeddings of the overlapping windows and averaged on the windows.
+    """
+    windows = torch.from_numpy(windows).float().to(device)
+    model.eval()
+    with torch.no_grad():
+        recon_windows,latent_out = model(windows)
+        recon_windows = recon_windows.cpu().numpy()
+        latent_out = latent_out.cpu().numpy()
+    latent_out = latent_out[:,:,0]
+    recon_sum = np.zeros_like(data)
+    counts_overlap = np.zeros(data.shape[1])
+    latent_sum = np.zeros((data.shape[1],latent_out.shape[1]))
+    window_size = 16
+    stride = 8
+    start_indices = range(0, data.shape[1] - window_size + 1, stride)
+    for i, start in enumerate(start_indices):
+        recon_sum[:, start : start + window_size] += recon_windows[i]
+        counts_overlap[start : start + window_size] += 1
+        for j in range(start, start + window_size):
+            latent_sum[j] += latent_out[i]
+
+    counts_overlap[counts_overlap == 0] = 1
+    reconstructed_curve = recon_sum / counts_overlap
+    bin_embeddings = latent_sum / counts_overlap[:, None]
+    reconstructed_curve = np.clip(reconstructed_curve, a_min=0, a_max=None)
+    error = np.abs(reconstructed_curve - data).sum(axis=0)
+    threshold = np.percentile(error, 90)
+    return error, threshold,bin_embeddings

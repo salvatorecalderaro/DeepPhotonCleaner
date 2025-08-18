@@ -18,3 +18,6 @@ if "uploaded_filename" not in st.session_state and not uploaded_file:
     st.info("Please upload a `.fits` file to start.")
     st.stop()
 
+st.sidebar.header("⚙️ Settings")
+bin_options = [2**i for i in range(10, 17)]
+nt = st.sidebar.selectbox("Select number of bins (power of 2)", bin_options)

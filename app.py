@@ -1,6 +1,6 @@
 import streamlit as st
 from tempfile import NamedTemporaryFile
-from DeepPhotonCleaner import read_fits, bin_data
+from DeepPhotonCleaner import identify_device,read_fits, bin_data
 from plot_utils import plot_noisy_curve
 
 st.set_page_config(page_title="DeepPhotonCleaner", layout="wide")
@@ -16,6 +16,8 @@ uploaded_file = st.file_uploader(
     type=["fits"],
     key=st.session_state.get("uploader_key", "default_uploader"),
 )
+
+device, dev_name = identify_device()
 
 if "uploaded_filename" not in st.session_state and not uploaded_file:
     st.info("Please upload a `.fits` file to start.")
@@ -53,6 +55,7 @@ if uploaded_file:
         st.session_state.curve_data = None
         st.session_state.selected_points = []
         st.session_state.curve_created = False
+        st.session_state.device = device
         
     if "uploaded_filename" in st.session_state:
         if not st.session_state.curve_created:

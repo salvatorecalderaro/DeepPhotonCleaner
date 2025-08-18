@@ -1,6 +1,37 @@
 import pandas as pd
 import numpy as np
 from astropy.io import fits
+import torch
+import random
+import os
+import platform
+import cpuinfo
+
+def set_seed(seed):
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
+
+
+def identify_device():
+    so = platform.system()
+    if so == "Darwin":
+        device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+        dev_name = cpuinfo.get_cpu_info()["brand_raw"]
+    else:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        dev_name = (
+            torch.cuda.get_device_name()
+            if device.type == "cuda"
+            else cpuinfo.get_cpu_info()["brand_raw"]
+        )
+    if device.type == "cuda":
+        set_seed(seed)
+    return device, dev_name
 
 def convert_endian(df):
     """

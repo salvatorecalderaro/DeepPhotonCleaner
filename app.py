@@ -81,7 +81,6 @@ if st.session_state.curve_created and st.session_state.curve_data is not None:
 if st.session_state.curve_created and not st.session_state.cleaning_done:
     if st.button("🚀 Run DPC Cleaning"):
         with st.spinner("Running cleaning..."):
-            print(st.session_state.device)
             windows = create_windows(st.session_state.curve_data, window_size=16, stride=8)
             model = MultichannelAutoencoder().to(st.session_state.device)
             st.session_state.model = train_model(st.session_state.device, model, windows)

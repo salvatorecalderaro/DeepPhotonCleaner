@@ -124,7 +124,7 @@ if st.session_state.get("cleaning_done", False):
     st.download_button(
         label="📄 Download interactive plot (HTML)",
         data=html_bytes,
-        file_name=f"{st.session_state.obs_id}_{st.session_state.uploaded_filename}_{st.session_state.nt}_TECLA_plot.html",
+        file_name=f"{st.session_state.obs_id}_{st.session_state.uploaded_filename}_{st.session_state.nt}_DPC_plot.html",
         mime="text/html",
     )
     with open(st.session_state["cleaned_path"], "rb") as f:

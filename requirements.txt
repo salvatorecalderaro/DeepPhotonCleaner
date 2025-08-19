@@ -1,7 +1,7 @@
-astropy==6.0.1
 numpy==2.3.2
-pandas==2.3.1
-plotly==6.1.2
-py_cpuinfo==9.0.0
+astropy==7.1.0
+pandas==2.2.3
+plotly==5.23.0
+py-cpuinfo==9.0.0
 streamlit==1.48.1
 torch==2.4.1

@@ -138,7 +138,7 @@ if st.session_state.get("cleaning_done", False):
 if st.sidebar.button("🔄 Reset ALL"):
     keys_to_clear = [
         "uploaded_filename",
-        "glowcurvenoise",
+        "glowcurvedata",
         "tmp_fits_path",
         "curve_data",
         "grid",
@@ -152,5 +152,7 @@ if st.sidebar.button("🔄 Reset ALL"):
     ]
     for key in keys_to_clear:
         if key in st.session_state:
-                del st.session_state[key]
-        st.session_state["uploader_key"] = str(uuid.uuid4())
+            del st.session_state[key]
+    
+    # Force uploader to reset by creating a new key
+    st.session_state["uploader_key"] = str(uuid.uuid4())

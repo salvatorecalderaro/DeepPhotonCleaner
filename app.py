@@ -1,4 +1,3 @@
-from flask import session
 import streamlit as st
 from tempfile import NamedTemporaryFile
 from DeepPhotonCleaner import identify_device, read_fits, bin_data, create_windows, train_model
@@ -11,9 +10,7 @@ import uuid
 
 st.set_page_config(page_title="DeepPhotonCleaner", layout="wide")
 st.title("🔭 DeepPhotonCleaner")
-st.subheader(
-    "The software uses deep learning to clean light-curves, separating signals from noise."
-)
+st.subheader("The software uses deep learning to clean light-curves, separating signals from noise due to solar flares.")
 st.write("Upload a `.fits` file to clean noisy photon bins and download the cleaned result.")
 
 # --- Upload file ---

@@ -20,6 +20,15 @@ gamma = 0.1
 epochs = 1000
 
 def set_seed(seed):
+    """
+    Set the random seed for the random, NumPy, and PyTorch libraries. This is
+    necessary to ensure reproducibility in the results of the code.
+
+    Parameters
+    ----------
+    seed : int
+        The seed value to use.
+    """
     random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
     np.random.seed(seed)
@@ -30,6 +39,24 @@ def set_seed(seed):
 
 
 def identify_device():
+    """
+    Identify the device to use for PyTorch computations and return the device
+    as well as its name.
+
+    If the system is macOS, the device is the Metal Performance Shader (MPS)
+    device if available, otherwise it is the CPU. For other systems, the device
+    is the CUDA device if available, otherwise it is the CPU.
+
+    If the device is a CUDA device, the random seed is set to ensure
+    reproducibility of results.
+
+    Returns
+    -------
+    device : torch.device
+        The device to use for PyTorch computations.
+    dev_name : str
+        The name of the device.
+    """
     so = platform.system()
     if so == "Darwin":
         device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")

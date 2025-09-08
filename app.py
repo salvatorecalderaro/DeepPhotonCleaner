@@ -1,3 +1,4 @@
+from numpy import mean
 import streamlit as st
 from tempfile import NamedTemporaryFile
 from DeepPhotonCleaner import identify_device, read_fits, bin_data, create_windows, train_model
@@ -86,7 +87,7 @@ if st.session_state.curve_created and not st.session_state.cleaning_done:
             st.session_state.model = train_model(st.session_state.device, model, windows)
             error,tau,bin_embs = reconstruct_curve(st.session_state.curve_data, st.session_state.model, windows, st.session_state.device)
             good_part = longest_good_segment(error, tau)
-            target, targetElow, targetEhigh = calculate_reference_features(st.session_state.glowcurvedata, st.session_state.grid, good_part)
+            target, targetElow, targetEhigh,mean_good_count, std_good_count = calculate_reference_features(st.session_state.glowcurvedata, st.session_state.curve_data, st.session_state.grid, good_part)
             noisy_bins, good_bins = find_noisy_bins(error, tau)
             good_bins,noisy_bins = filter_good_bins(st.session_state.curve_data, good_bins, noisy_bins, good_part)
             clean_curve_path,cleaned_curve = clean_noisy_bins(
@@ -97,7 +98,8 @@ if st.session_state.curve_created and not st.session_state.cleaning_done:
                 st.session_state.curve_data,
                 st.session_state.grid,
                 noisy_bins,
-                good_part,
+                mean_good_count,
+                std_good_count,
                 target,
                 targetElow,
                 targetEhigh,

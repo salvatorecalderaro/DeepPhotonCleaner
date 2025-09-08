@@ -489,48 +489,16 @@ def clean_noisy_bins(
         binned_data,
         grid,
         noisy_bins,
-        good_bins,
+        mean_good_count,
+        sd_mean_count,
         target,
         targetElow,
         targetEhigh,
     ):
-    """
-    Cleans the noisy bins in the observation data by adjusting the photon counts
-    and identifying solar flare contaminated photons.
 
-    Parameters
-    ----------
-    obs_id : str
-        The observation ID.
-    filename : str
-        The name of the FITS file.
-    nbins : int
-        The number of bins.
-    glowcurvedata : pandas.DataFrame
-        DataFrame containing the data from the FITS file.
-    binned_data : array_like
-        The binned data array.
-    grid : array_like
-        The grid of time values.
-    noisy_bins : array_like
-        Indices of the noisy bins.
-    good_bins : array_like
-        Indices of the good part.
-    target : float
-        The target time for ranking photon similarity.
-    targetElow : float
-        The target energy for low energy photons.
-    targetEhigh : float
-        The target energy for high energy photons.
+    lower = int(mean_good_count - sd_mean_count)
+    upper = int(mean_good_count + sd_mean_count)
 
-    Returns
-    -------
-    clean_curve : array_like
-        The cleaned curve with adjusted photon counts for noisy bins.
-    """
-
-    good_counts = binned_data[0, good_bins]
-    mean_good_count = good_counts.mean()
 
     noisy_photons = []
 
@@ -546,8 +514,7 @@ def clean_noisy_bins(
         t_end = grid[bin_idx + 1]
 
         bin_photons = glowcurvedata[(glowcurvedata["TIME"] >= t_start) & (glowcurvedata["TIME"] < t_end)]
-        raw_target = max(mean_good_count, gamma * bin_count + (1 - gamma) * mean_good_count)
-        n_target = int(np.clip(round(raw_target), 0, len(bin_photons)))
+        n_target = np.random.randint(lower, upper)
         new_noisy_counts.append(n_target)
 
         good_bin_photons = rank_photons_by_similarity(target, targetElow, targetEhigh, bin_photons, n_target)

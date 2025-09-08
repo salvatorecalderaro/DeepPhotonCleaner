@@ -336,7 +336,8 @@ def find_noisy_bins(error, threshold):
 
 def filter_good_bins(binned_data, good_bins, noisy_bins, good_part):
     """
-    Filters out 'good' bins that are not actually part of the longest good segment.
+    Refine the identification of noisy bins by using the mean and standard
+    deviation of the counts in the longest good segment.
 
     Parameters
     ----------
@@ -351,25 +352,32 @@ def filter_good_bins(binned_data, good_bins, noisy_bins, good_part):
 
     Returns
     -------
-    array_like
-        Updated array of 'noisy' bins after filtering.
+    tuple
+        Tuple of two arrays. The first array contains the refined indices of the
+        'good' bins, and the second array contains the refined indices of the
+        'noisy' bins.
     """
-    good_counts = binned_data[0, good_bins]
-    mean_good_count = good_counts.mean()
-    std_good_count = good_counts.std()
     counts = binned_data[0]
-    noisy_bins = list(noisy_bins)
-    good_bins = list(good_bins)
+    good_counts = counts[good_part]  # solo la parte lunga
+    mean_good_count = good_counts.mean()
+    sd_good_count = good_counts.std()
+    
+    new_good_bins = []
+    new_noisy_bins = list(noisy_bins)
+
     for bin_idx in good_bins:
-        if bin_idx not in good_part:
-            if counts[bin_idx] > mean_good_count + std_good_count:
-                noisy_bins.append(bin_idx)
-                good_bins.remove(bin_idx)
-    noisy_bins = np.array(noisy_bins)
-    good_bins = np.array(good_bins) 
-    print(f"Number of noisy bins: {len(noisy_bins)}")
-    print(f"Number of good bins: {len(good_bins)}")
-    return good_bins,noisy_bins
+        if bin_idx not in good_part and counts[bin_idx] > mean_good_count + 2 * sd_good_count:
+            new_noisy_bins.append(bin_idx)
+        else:
+            new_good_bins.append(bin_idx)
+
+    new_good_bins = np.array(new_good_bins)
+    new_noisy_bins = np.array(new_noisy_bins)
+    
+    print(f"Number of noisy bins: {len(new_noisy_bins)}")
+    print(f"Number of good bins: {len(new_good_bins)}")
+    return new_good_bins, new_noisy_bins
+
 
 def calculate_reference_features(glowcurvedata, grid, good_part):
     """

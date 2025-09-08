@@ -381,6 +381,36 @@ def filter_good_bins(binned_data, good_bins, noisy_bins, good_part):
 
 
 def calculate_reference_features(glowcurvedata,binned_data, grid, good_part):
+    """
+    Calculates reference features from the given data.
+
+    The reference features are the target time (median time difference between
+    consecutive photons in the longest good segment), the target energy for
+    low energy photons (median energy of photons with energy between 500 and
+    2000 in the longest good segment), the target energy for high energy
+    photons (median energy of photons with energy between 2000 and 10000 in
+    the longest good segment), the mean count of the longest good segment,
+    and the standard deviation of the counts in the longest good segment.
+
+    Parameters
+    ----------
+    glowcurvedata : pandas.DataFrame
+        DataFrame containing the data from the FITS file.
+    binned_data : array_like
+        Array containing the binned data.
+    grid : array_like
+        The grid of time values.
+    good_part : array_like
+        Indices of the longest good segment.
+
+    Returns
+    -------
+    tuple
+        Tuple of five values: the target time, the target energy for low energy
+        photons, the target energy for high energy photons, the mean count of
+        the longest good segment, and the standard deviation of the counts in
+        the longest good segment.
+    """
     t_start = grid[good_part[0]]
     t_end = grid[good_part[-1] + 1]
     photons_good = glowcurvedata[(glowcurvedata["TIME"] >= t_start) & (glowcurvedata["TIME"] < t_end)]

@@ -379,28 +379,8 @@ def filter_good_bins(binned_data, good_bins, noisy_bins, good_part):
     return new_good_bins, new_noisy_bins
 
 
-def calculate_reference_features(glowcurvedata, grid, good_part):
-    """
-    Calculates the reference features for a given set of photons.
 
-    Parameters
-    ----------
-    glowcurvedata : pandas.DataFrame
-        DataFrame containing the data from the FITS file.
-    grid : array_like
-        Array of bin edges.
-    good_part : array_like
-        Indices of the good bins.
-
-    Returns
-    -------
-    tuple
-        Tuple of three float values. The first value is the median time difference
-        between consecutive photons in the 'good' bins, the second value is the median
-        energy of photons in the 'good' bins with energy between 500 and 2000, and the
-        third value is the median energy of photons in the 'good' bins with energy
-        between 2000 and 10000.
-    """
+def calculate_reference_features(glowcurvedata,binned_data, grid, good_part):
     t_start = grid[good_part[0]]
     t_end = grid[good_part[-1] + 1]
     photons_good = glowcurvedata[(glowcurvedata["TIME"] >= t_start) & (glowcurvedata["TIME"] < t_end)]
@@ -412,7 +392,11 @@ def calculate_reference_features(glowcurvedata, grid, good_part):
     goodEhigh = energies[(energies > 2000) & (energies < 10000)]
     targetElow = np.median(goodElow) if len(goodElow) > 0 else 0
     targetEhigh = np.median(goodEhigh) if len(goodEhigh) > 0 else 0
-    return target, targetElow, targetEhigh
+    bin_counts = binned_data[0]
+    mean_good_count = np.mean(bin_counts[good_part])
+    sd_good_count = np.std(bin_counts[good_part])
+    return target, targetElow, targetEhigh, mean_good_count, sd_good_count
+
 
 def rank_photons_by_similarity(target, targetElow, targetEhigh, noisy_photons, n):
     """
